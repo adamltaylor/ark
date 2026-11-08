@@ -973,12 +973,13 @@ impl From<&PlotId> for RObject {
 }
 
 /// Default DPI for converting inches to pixels.
-/// Matches R's default: 96 on macOS, 72 on Linux/Windows.
+/// 96 on macOS and Linux, 72 on Windows. (Upstream uses R's 72 on Linux too;
+/// Replica's patch makes an inch the same on Linux as on macOS.)
 /// See `default_resolution_in_pixels_per_inch()` in graphics.R.
-const DEFAULT_DPI: f64 = if cfg!(target_os = "macos") {
-    96.0
-} else {
+const DEFAULT_DPI: f64 = if cfg!(target_os = "windows") {
     72.0
+} else {
+    96.0
 };
 
 /// Default aspect ratio (width:height) used when only output_width_px is provided.

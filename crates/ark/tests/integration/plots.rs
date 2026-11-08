@@ -10,10 +10,10 @@ use base64::prelude::*;
 
 /// Default DPI for the current OS, matching the constant in graphics_device.rs.
 fn default_dpi() -> f64 {
-    if cfg!(target_os = "macos") {
-        96.0
-    } else {
+    if cfg!(target_os = "windows") {
         72.0
+    } else {
+        96.0
     }
 }
 
@@ -613,6 +613,34 @@ fn test_plot_with_fig_size_metadata() {
     // 5 inches * DPI, 4 inches * DPI
     assert_eq!(width, (5.0 * dpi).round() as u32);
     assert_eq!(height, (4.0 * dpi).round() as u32);
+
+    frontend.recv_iopub_idle();
+    frontend.recv_shell_execute_reply();
+}
+
+/// On Linux an inch is 96 pixels, as on macOS, not R's 72: Replica's patch.
+/// Both the size from `ark.plot.width` / `ark.plot.height` in inches and the
+/// resolution given to R's devices follow it.
+#[test]
+#[cfg(target_os = "linux")]
+fn test_an_inch_is_96_pixels_on_linux() {
+    let frontend = DummyArkFrontend::lock();
+
+    frontend.execute_request(
+        r#".Call("ps_graphics_default_dpi", PACKAGE = "(embedding)")"#,
+        |result| assert_eq!(result, "[1] 96"),
+    );
+
+    let code = "options(ark.plot.width = 5, ark.plot.height = 4, ark.plot.pixel_ratio = 1); plot(1:10)";
+    frontend.send_execute_request(code, ExecuteRequestOptions::default());
+    frontend.recv_iopub_busy();
+    frontend.recv_iopub_execute_input();
+
+    let display = frontend.recv_iopub_display_data_content();
+    let png_data = display.data["image/png"]
+        .as_str()
+        .expect("display_data should contain image/png");
+    assert_eq!(png_dimensions(png_data), (480, 384));
 
     frontend.recv_iopub_idle();
     frontend.recv_shell_execute_reply();

@@ -49,4 +49,10 @@ Replica needs it, and its upstream issue or pull request if there is one.
 This file is Replica's own, not a patch, and conflicts with nothing
 upstream.
 
-No patches yet.
+- **An inch is 96 pixels on Linux, as on macOS** (`DEFAULT_DPI` in
+  `crates/ark/src/plots/graphics_device.rs`). Upstream uses R's 72 on Linux
+  and Windows but 96 on macOS, so the same `ark.plot.width` gives a plot a
+  third larger on a Mac. Replica shows plots at 96 logical pixels to the
+  inch, as other Linux apps (and MATLAB) do, and with this its sizes in
+  inches mean that, and its pixel ratio is a whole 3. Windows keeps 72. Test:
+  `plots::test_an_inch_is_96_pixels_on_linux`.
