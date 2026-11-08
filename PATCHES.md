@@ -65,3 +65,12 @@ upstream.
   `replica_html()` objects show through it when printed, and so does
   anything built on IRdisplay. Strings are joined as lines; raw bytes are
   sent base64-encoded. Tests: `display::*`.
+- **`.ark.send_plot()` sends the current plot now** (`ps_send_plot` in
+  `crates/ark/src/display.rs`, and `display.R`), as a new plot or an update
+  to the one already sent. Upstream sends a plot only when the next one
+  starts or the request ends (or the device changes), since `lines()` and
+  the like can still draw on it, so in a transcript a plot comes out after
+  text printed after it. What is drawn on it afterwards comes as an update,
+  which the frontend applies where the plot is. Replica's public
+  `replica_send_plot()` calls it, and so do the print methods of its
+  `replica_markdown()` and `replica_html()`. Tests: `display::test_send_plot_*`.

@@ -1,9 +1,13 @@
 //
 // display.rs
 //
-// Replica's patch: sending a MIME bundle from R as a Jupyter `display_data`
-// message, for `.ark.display_data()` in `modules/positron/display.R`.
+// Replica's patches: sending a MIME bundle from R as a Jupyter
+// `display_data` message, and sending the current plot now, for
+// `.ark.display_data()` and `.ark.send_plot()` in
+// `modules/positron/display.R`.
 //
+
+use std::rc::Rc;
 
 use amalthea::socket::iopub::IOPubMessage;
 use amalthea::wire::display_data::DisplayData;
@@ -39,6 +43,15 @@ pub unsafe extern "C-unwind" fn ps_display_data(data: SEXP, metadata: SEXP) -> a
     Console::get().iopub_tx().send(message)?;
 
     Ok(R_NilValue)
+}
+
+/// Send any change to the current plot now, as a new plot or an update to
+/// the one already sent, rather than when the next plot starts or the
+/// request ends; what is drawn on it afterwards comes as an update.
+#[ark::register]
+fn ps_send_plot(console: &Console) -> anyhow::Result<SEXP> {
+    Rc::clone(console.device_context()).process_changes(console);
+    Ok(harp::r_null())
 }
 
 /// The JSON object for a MIME bundle: each element's data under its name.

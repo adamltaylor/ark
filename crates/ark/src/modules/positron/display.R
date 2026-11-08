@@ -1,8 +1,9 @@
 #
 # display.R
 #
-# Replica's patch: showing a MIME bundle from R, as a Jupyter `display_data`
-# message, and pointing IRdisplay at it.
+# Replica's patches: showing a MIME bundle from R, as a Jupyter
+# `display_data` message, and pointing IRdisplay at it; and sending the
+# current plot now.
 #
 
 #' Send a MIME bundle to the frontend as a `display_data` message
@@ -14,6 +15,18 @@
 #' @export
 .ark.display_data <- function(data, metadata = NULL) {
     .ps.Call("ps_display_data", data, metadata)
+    invisible()
+}
+
+#' Send the current plot now
+#'
+#' Ark sends a plot when the next one starts or the code has run, since
+#' `lines()`, `legend()` and the like can still be drawing on it. This sends
+#' any change to it now, so that it comes out before the output that follows;
+#' what is drawn on it afterwards comes as an update to it.
+#' @export
+.ark.send_plot <- function() {
+    .ps.Call("ps_send_plot")
     invisible()
 }
 

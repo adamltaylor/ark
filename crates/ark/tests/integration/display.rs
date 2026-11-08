@@ -68,3 +68,42 @@ fn test_irdisplay_base_display_func_sends_display_data() {
     frontend.recv_iopub_idle();
     frontend.recv_shell_execute_reply();
 }
+
+#[test]
+fn test_send_plot_sends_a_plot_before_what_follows_and_updates_it_after() {
+    let frontend = DummyArkFrontend::lock();
+
+    // The plot goes out when `.ark.send_plot()` is called, before the output
+    // after it, and what is drawn on it afterwards comes as an update to it.
+    let code = r#"plot(1:3); .ark.send_plot(); .ark.display_data(list("text/plain" = "after")); lines(1:3)"#;
+    frontend.send_execute_request(code, ExecuteRequestOptions::default());
+    frontend.recv_iopub_busy();
+    frontend.recv_iopub_execute_input();
+
+    let plot = frontend.recv_iopub_display_data_content();
+    assert!(plot.data["image/png"].is_string());
+    let after = frontend.recv_iopub_display_data_content();
+    assert_eq!(after.data, json!({"text/plain": "after"}));
+    frontend.recv_iopub_update_display_data();
+
+    frontend.recv_iopub_idle();
+    frontend.recv_shell_execute_reply();
+}
+
+#[test]
+fn test_send_plot_with_nothing_pending_sends_nothing() {
+    let frontend = DummyArkFrontend::lock();
+
+    frontend.send_execute_request(
+        r#".ark.send_plot(); .ark.display_data(list("text/plain" = "only this"))"#,
+        ExecuteRequestOptions::default(),
+    );
+    frontend.recv_iopub_busy();
+    frontend.recv_iopub_execute_input();
+
+    let display = frontend.recv_iopub_display_data_content();
+    assert_eq!(display.data, json!({"text/plain": "only this"}));
+
+    frontend.recv_iopub_idle();
+    frontend.recv_shell_execute_reply();
+}
