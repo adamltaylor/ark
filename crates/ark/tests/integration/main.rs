@@ -19,6 +19,7 @@ mod dap_vdoc;
 mod data_explorer;
 mod data_explorer_debug;
 mod data_explorer_integration;
+mod display;
 mod evaluate_code;
 mod help;
 mod kernel;

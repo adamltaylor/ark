@@ -19,6 +19,7 @@ pub mod control;
 pub mod coordinates;
 pub mod dap;
 pub mod data_explorer;
+pub mod display;
 pub mod debug;
 
 pub mod fixtures;

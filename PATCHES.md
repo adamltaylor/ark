@@ -56,3 +56,12 @@ upstream.
   inch, as other Linux apps (and MATLAB) do, and with this its sizes in
   inches mean that, and its pixel ratio is a whole 3. Windows keeps 72. Test:
   `plots::test_an_inch_is_96_pixels_on_linux`.
+- **`.ark.display_data(data, metadata)` sends a MIME bundle from R** as a
+  Jupyter `display_data` message (`crates/ark/src/display.rs`,
+  `crates/ark/src/modules/positron/display.R`), and the option
+  `jupyter.base_display_func` points at it, as IRkernel's does, so
+  `IRdisplay::display_markdown()` and the like work. Upstream has only a
+  private function for HTML. Replica's `replica_markdown()` and
+  `replica_html()` objects show through it when printed, and so does
+  anything built on IRdisplay. Strings are joined as lines; raw bytes are
+  sent base64-encoded. Tests: `display::*`.
