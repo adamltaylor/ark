@@ -262,10 +262,14 @@ init_use_svglite <- function() {
 #' support a `pixel_ratio` of 2x the default resolution. We simply don't know
 #' the pixel ratio at this point.
 device_shadow <- function() {
+    size <- shadow_device_size()
+
     if (use_ragg()) {
         # For the shadow ragg device, we use a special device that only captures
         # the display list, it doesn't actually do any rendering!
         ragg::agg_record(
+            width = size$width,
+            height = size$height,
             res = default_resolution_in_pixels_per_inch()
         )
     } else {
@@ -278,6 +282,8 @@ device_shadow <- function() {
         withCallingHandlers(
             grDevices::png(
                 filename = filename,
+                width = size$width,
+                height = size$height,
                 type = default_device_type(),
                 res = default_resolution_in_pixels_per_inch()
             ),
@@ -286,6 +292,26 @@ device_shadow <- function() {
             }
         )
     }
+}
+
+#' The size, in pixels, of the device to shadow
+#'
+#' Replica's patch: the size plots will be drawn at, if `ark.plot.width` and
+#' `ark.plot.height` (in inches) say, so that what measures text as it draws
+#' (`legend()`, say) lays it out for that size; else the devices' default of
+#' 480 pixels square. The device is made at the first plot (and again after
+#' `dev.off()`), so it follows options set before then.
+shadow_device_size <- function() {
+    dpi <- default_resolution_in_pixels_per_inch()
+    pixels <- function(option) {
+        inches <- getOption(option)
+        if (is.numeric(inches) && length(inches) == 1 && inches > 0) {
+            round(inches * dpi)
+        } else {
+            480
+        }
+    }
+    list(width = pixels("ark.plot.width"), height = pixels("ark.plot.height"))
 }
 
 device_png <- function(filename, width, height, res) {

@@ -74,3 +74,13 @@ upstream.
   which the frontend applies where the plot is. Replica's public
   `replica_send_plot()` calls it, and so do the print methods of its
   `replica_markdown()` and `replica_html()`. Tests: `display::test_send_plot_*`.
+- **Plots are recorded on a device the size they will be drawn at**
+  (`shadow_device_size()` in `crates/ark/src/modules/positron/graphics.R`),
+  when `ark.plot.width` and `ark.plot.height` say what that is. Upstream
+  records on a 5 inch square device (ragg's default 480 pixels) whatever
+  size plots are drawn at, so what measures text as it draws, such as
+  `legend()`, laid it out for the wrong size: a legend's box came out far
+  bigger than its text. The device is made at the first plot (and after
+  `dev.off()`), so it follows the options set before then, as Replica sets
+  them at the start of each session. Test:
+  `plots::test_the_recording_device_is_the_size_plots_are_drawn_at`.

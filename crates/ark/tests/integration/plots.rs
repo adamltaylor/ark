@@ -646,6 +646,25 @@ fn test_an_inch_is_96_pixels_on_linux() {
     frontend.recv_shell_execute_reply();
 }
 
+/// With `ark.plot.width` and `ark.plot.height` set, the device plots are
+/// recorded on is that size, as the plots will be drawn: what measures text
+/// as it draws (`legend()`) then lays it out for the size it is shown at.
+/// Replica's patch; upstream records on a 5 inch square device whatever size
+/// plots are drawn at.
+#[test]
+fn test_the_recording_device_is_the_size_plots_are_drawn_at() {
+    let frontend = DummyArkFrontend::lock();
+
+    frontend.execute_request_invisibly("options(ark.plot.width = 7, ark.plot.height = 6)");
+    frontend.send_execute_request("plot(1:10); dev.size(\"in\")", ExecuteRequestOptions::default());
+    frontend.recv_iopub_busy();
+    frontend.recv_iopub_execute_input();
+    frontend.recv_iopub_display_data();
+    assert_eq!(frontend.recv_iopub_execute_result(), "[1] 7 6");
+    frontend.recv_iopub_idle();
+    frontend.recv_shell_execute_reply();
+}
+
 /// Test that plots rendered with output_width_px (but no fig dimensions)
 /// produce a PNG at the expected width with a 4:3 aspect ratio.
 #[test]
